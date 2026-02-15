@@ -201,7 +201,7 @@ function subscribeUserData(uid) {
       historyList,
       entries,
       (item) =>
-        `<strong>${item.type === "call" ? "📞 Appel" : "✉️ Message"}</strong> → ${item.target}<br><small>${item.content || "(aucun texte)"}</small>`
+        `<strong>${item.type === "call" ? "Appel" : "Message"}</strong> → ${item.target}<br><small>${item.content || "(aucun texte)"}</small>`
     );
   });
 }
