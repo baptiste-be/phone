@@ -9,6 +9,7 @@
   --btn-glass-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.14));
   --btn-glass-edge: rgba(255, 255, 255, 0.44);
   --btn-text: #052146;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 * {
@@ -29,6 +30,13 @@ body {
 .app-shell {
   width: min(1180px, 92vw);
   margin: 2.6rem auto;
+  background: radial-gradient(circle at 15% 15%, #24365f, #0a1021 55%);
+  color: #eef3ff;
+}
+
+.app-shell {
+  width: min(1150px, 92vw);
+  margin: 2.5rem auto;
   position: relative;
   z-index: 1;
 }
@@ -54,12 +62,18 @@ body {
   pointer-events: none;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 32%);
   opacity: 0.82;
+  backdrop-filter: blur(18px) saturate(140%);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(1, 8, 28, 0.5);
 }
 
 .card-header,
 .auth-card,
 .dashboard {
   padding: 1.25rem 1.5rem;
+  padding: 1.2rem 1.4rem;
   margin-bottom: 1rem;
 }
 
@@ -74,11 +88,13 @@ h1,
 h2,
 h3 {
   letter-spacing: 0.01em;
+  margin: 0.3rem 0;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
 }
 
@@ -95,6 +111,7 @@ label {
   flex-direction: column;
   gap: 0.35rem;
   margin: 0.7rem 0;
+  margin: 0.65rem 0;
   font-size: 0.92rem;
 }
 
@@ -103,6 +120,9 @@ textarea,
 button {
   border-radius: 14px;
   padding: 0.74rem 0.85rem;
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
   font: inherit;
 }
 
@@ -145,6 +165,24 @@ button:active {
 .danger {
   color: #3c0a13;
   background: linear-gradient(160deg, rgba(255, 192, 201, 0.9), rgba(255, 138, 160, 0.78));
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  color: #f3f7ff;
+}
+
+button {
+  cursor: pointer;
+  background: linear-gradient(130deg, #83a7ff, #6390ff);
+  color: #06122f;
+  font-weight: 700;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+.danger {
+  background: linear-gradient(130deg, #ff8a9a, #ff5b76);
 }
 
 .top-row,
@@ -161,6 +199,7 @@ button:active {
   font-weight: 700;
   text-align: center;
   letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
 }
 
 .list {
@@ -169,6 +208,10 @@ button:active {
   padding: 0;
   display: grid;
   gap: 0.55rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
   max-height: 220px;
   overflow: auto;
 }
@@ -183,6 +226,14 @@ button:active {
 .muted {
   opacity: 0.8;
   color: var(--muted);
+  padding: 0.65rem;
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.muted {
+  opacity: 0.75;
   font-size: 0.9rem;
 }
 
@@ -190,6 +241,7 @@ button:active {
   position: fixed;
   border-radius: 50%;
   filter: blur(7px);
+  filter: blur(5px);
   z-index: 0;
 }
 
@@ -207,6 +259,19 @@ button:active {
   bottom: 20px;
   left: -90px;
   background: rgba(186, 130, 255, 0.26);
+  width: 340px;
+  height: 340px;
+  top: -100px;
+  right: -60px;
+  background: rgba(122, 213, 255, 0.3);
+}
+
+.orb-2 {
+  width: 280px;
+  height: 280px;
+  bottom: 20px;
+  left: -80px;
+  background: rgba(161, 120, 255, 0.25);
 }
 
 .hidden {
@@ -224,6 +289,12 @@ button:active {
   background: linear-gradient(155deg, rgba(40, 62, 102, 0.82), rgba(19, 32, 61, 0.92));
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(18px);
+  max-width: 320px;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(17, 33, 64, 0.92);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 @media (max-width: 800px) {
