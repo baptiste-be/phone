@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liquid Glass Phone</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <main class="app-shell">
+      <header class="glass card-header">
+        <h1>Liquid Glass Phone</h1>
+        <p>Crée ton numéro et appelle / envoie des messages avec Firebase.</p>
+      </header>
+
+      <section class="glass auth-card" id="authCard">
+        <h2>Compte</h2>
+        <form id="authForm">
+          <label>
+            Email
+            <input id="email" type="email" required placeholder="ton@email.com" />
+          </label>
+          <label>
+            Mot de passe
+            <input id="password" type="password" required minlength="6" placeholder="Minimum 6 caractères" />
+          </label>
+          <div class="row">
+            <button type="submit" data-mode="signup">Créer un compte</button>
+            <button type="button" data-mode="login" id="loginBtn">Se connecter</button>
+          </div>
+        </form>
+        <p class="muted">Tu peux te connecter sur plusieurs appareils avec le même email.</p>
+      </section>
+
+      <section class="glass dashboard hidden" id="dashboard">
+        <div class="top-row">
+          <div>
+            <h2>Espace utilisateur</h2>
+            <p id="welcome"></p>
+          </div>
+          <button id="logoutBtn" class="danger">Déconnexion</button>
+        </div>
+
+        <div class="grid">
+          <article class="glass panel">
+            <h3>Ton numéro</h3>
+            <p class="muted">Format: XX-XX-XX-XX-XX</p>
+            <div class="number-row">
+              <input id="phoneNumber" readonly />
+              <button id="generateBtn" type="button">Générer</button>
+            </div>
+            <button id="claimBtn" type="button">Réserver ce numéro</button>
+          </article>
+
+          <article class="glass panel">
+            <h3>Appeler</h3>
+            <label>
+              Numéro cible
+              <input id="callTarget" placeholder="12-34-56-78-90" />
+            </label>
+            <button id="callBtn" type="button">Appeler</button>
+          </article>
+
+          <article class="glass panel">
+            <h3>Envoyer un message</h3>
+            <label>
+              Numéro cible
+              <input id="messageTarget" placeholder="12-34-56-78-90" />
+            </label>
+            <label>
+              Message
+              <textarea id="messageBody" rows="3" placeholder="Ton message..."></textarea>
+            </label>
+            <button id="sendMessageBtn" type="button">Envoyer</button>
+          </article>
+
+          <article class="glass panel">
+            <h3>Contacts</h3>
+            <label>
+              Nom
+              <input id="contactName" placeholder="Ex: Alex" />
+            </label>
+            <label>
+              Numéro
+              <input id="contactPhone" placeholder="12-34-56-78-90" />
+            </label>
+            <button id="addContactBtn" type="button">Ajouter</button>
+            <ul id="contactsList" class="list"></ul>
+          </article>
+
+          <article class="glass panel wide">
+            <h3>Historique appels/messages</h3>
+            <ul id="historyList" class="list"></ul>
+          </article>
+        </div>
+      </section>
+
+      <div id="toast" class="toast hidden"></div>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
