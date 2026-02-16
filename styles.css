@@ -1,0 +1,140 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, "SF Pro Display", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --bg: #06090f;
+  --bg-soft: #0b1220;
+  --text: #ebf1ff;
+  --muted: rgba(235, 241, 255, 0.66);
+  --glass: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04));
+  --edge: rgba(255, 255, 255, 0.24);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(38rem 22rem at 8% -6%, rgba(109, 149, 255, 0.2), transparent 55%),
+    radial-gradient(36rem 20rem at 100% 2%, rgba(175, 126, 255, 0.16), transparent 52%),
+    linear-gradient(165deg, #03050a, var(--bg) 45%, var(--bg-soft));
+}
+
+.shell {
+  width: min(1060px, 92vw);
+  margin: 2.2rem auto;
+  position: relative;
+  z-index: 1;
+}
+
+.glass {
+  position: relative;
+  background: var(--glass);
+  border: 1px solid var(--edge);
+  border-radius: 20px;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 1px 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 34%);
+}
+
+.header, .auth, .app { padding: 1.2rem 1.35rem; margin-bottom: 0.9rem; }
+h1, h2, h3, p { margin: 0.2rem 0; }
+h1 { font-size: 1.45rem; font-weight: 650; }
+h2, h3 { font-weight: 600; }
+
+.stack label { display: grid; gap: 0.35rem; margin: 0.6rem 0; }
+
+input, textarea, button {
+  width: 100%;
+  border-radius: 12px;
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+}
+
+input, textarea {
+  color: var(--text);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  color: #0e2344;
+  font-weight: 700;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.18));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+button:hover { filter: brightness(1.03); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+
+.danger {
+  color: #3b0e14;
+  background: linear-gradient(160deg, rgba(255, 193, 201, 0.9), rgba(255, 146, 166, 0.75));
+}
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.row-tight { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: center; }
+.top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+
+.grid { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.panel { padding: 0.9rem; }
+.wide { grid-column: span 2; }
+
+.list {
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  max-height: 210px;
+  overflow: auto;
+}
+
+.list li {
+  padding: 0.58rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.muted { color: var(--muted); font-size: 0.9rem; }
+.hidden { display: none; }
+
+.toast {
+  position: fixed;
+  right: 1.3rem;
+  bottom: 1.3rem;
+  max-width: 320px;
+  border-radius: 12px;
+  padding: 0.78rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: linear-gradient(150deg, rgba(30, 43, 67, 0.86), rgba(13, 21, 38, 0.92));
+}
+
+.ambient {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(8px);
+  z-index: 0;
+}
+.ambient-a { width: 270px; height: 270px; top: -80px; right: -65px; background: rgba(122, 172, 255, 0.2); }
+.ambient-b { width: 230px; height: 230px; bottom: 15px; left: -70px; background: rgba(150, 123, 255, 0.16); }
+
+@media (max-width: 800px) {
+  .row { grid-template-columns: 1fr; }
+  .top-row { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .wide { grid-column: span 1; }
+}
