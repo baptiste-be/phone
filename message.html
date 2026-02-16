@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone® · Messages</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar glass">
+      <h1 class="brand">Phone®</h1>
+      <a class="btn-link" href="index.html">Retour</a>
+    </header>
+
+    <main class="page">
+      <section class="glass card chat-card">
+        <h2>Messages en temps réel</h2>
+        <ul id="messagesList" class="messages-list"></ul>
+        <form id="messageForm" class="chat-input-row">
+          <input id="messageText" placeholder="Écrire un message..." required />
+          <button type="submit" class="btn-primary">Envoyer</button>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="messages.js"></script>
+  </body>
+</html>

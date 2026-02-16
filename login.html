@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone® · Connexion</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page center-page">
+      <section class="glass card auth-card">
+        <h1 class="brand">Phone®</h1>
+        <h2 id="authTitle">Connexion</h2>
+
+        <form id="authForm" class="stack">
+          <label>
+            Email
+            <input id="email" type="email" placeholder="nom@domaine.com" required />
+          </label>
+
+          <label>
+            Mot de passe
+            <input id="password" type="password" minlength="6" required />
+          </label>
+
+          <button id="submitBtn" type="submit" class="btn-primary">Se connecter</button>
+        </form>
+
+        <button id="modeSwitch" type="button" class="btn-link">Pas encore de compte ? Créer un compte</button>
+        <p id="errorBox" class="error-box"></p>
+      </section>
+    </main>
+
+    <script type="module">
+      import { getCurrentMode, submitForm, toggleMode, normalizeError } from "./app.js";
+
+      const authForm = document.getElementById("authForm");
+      const modeSwitch = document.getElementById("modeSwitch");
+      const errorBox = document.getElementById("errorBox");
+
+      authForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorBox.textContent = "";
+        try {
+          await submitForm(getCurrentMode());
+          window.location.href = "index.html";
+        } catch (error) {
+          errorBox.textContent = normalizeError(error);
+        }
+      });
+
+      modeSwitch.addEventListener("click", () => {
+        errorBox.textContent = "";
+        toggleMode();
+      });
+    </script>
+  </body>
+</html>

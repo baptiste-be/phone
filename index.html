@@ -4,91 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phone®</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="ambient ambient-a"></div>
-    <div class="ambient ambient-b"></div>
+    <header class="topbar glass">
+      <div>
+        <h1 class="brand">Phone®</h1>
+        <p class="muted">Accueil</p>
+      </div>
+      <button id="logoutBtn" class="btn-danger" type="button">Déconnexion</button>
+    </header>
 
-    <main class="shell">
-      <header class="glass header">
-        <h1>Phone®</h1>
-        <p class="muted">Communication sobre, style liquid glass.</p>
-      </header>
-
-      <section class="glass auth" id="authCard">
-        <h2>Créer un compte</h2>
-        <form id="authForm" class="stack">
-          <label>
-            Email
-            <input id="email" type="email" required placeholder="nom@domaine.com" />
-          </label>
-          <label>
-            Mot de passe
-            <input id="password" type="password" required minlength="6" placeholder="Minimum 6 caractères" />
-          </label>
-          <label>
-            Numéro souhaité (optionnel)
-            <input id="desiredNumber" placeholder="12-34-56-78-90" />
-          </label>
-
-          <div class="row">
-            <button type="submit" id="signupBtn">Créer un compte</button>
-            <button type="button" id="loginBtn">Se connecter</button>
-          </div>
-
-          <p id="configHint" class="muted hidden">Configure `firebase-config.js` avec tes clés Firebase.</p>
-        </form>
+    <main class="page">
+      <section class="glass card">
+        <h2>Compte</h2>
+        <p><strong>Email :</strong> <span id="userEmail">...</span></p>
+        <p><strong>Numéro Phone® :</strong> <span id="userPhone">...</span></p>
       </section>
 
-      <section class="glass app hidden" id="dashboard">
-        <div class="top-row">
-          <p id="welcome" class="muted"></p>
-          <button id="logoutBtn" class="danger">Déconnexion</button>
-        </div>
-
-        <div class="grid">
-          <article class="glass panel">
-            <h3>Numéro</h3>
-            <p class="muted">Format: XX-XX-XX-XX-XX</p>
-            <div class="row-tight">
-              <input id="phoneNumber" placeholder="12-34-56-78-90" />
-              <button id="generateBtn" type="button">Aléatoire</button>
-            </div>
-            <button id="claimBtn" type="button">Réserver ce numéro</button>
-          </article>
-
-          <article class="glass panel">
-            <h3>Appel</h3>
-            <input id="callTarget" placeholder="12-34-56-78-90" />
-            <button id="callBtn" type="button">Appeler</button>
-          </article>
-
-          <article class="glass panel">
-            <h3>Message</h3>
-            <input id="messageTarget" placeholder="12-34-56-78-90" />
-            <textarea id="messageBody" rows="3" placeholder="Message"></textarea>
-            <button id="sendMessageBtn" type="button">Envoyer</button>
-          </article>
-
-          <article class="glass panel">
-            <h3>Contacts</h3>
-            <input id="contactName" placeholder="Nom" />
-            <input id="contactPhone" placeholder="12-34-56-78-90" />
-            <button id="addContactBtn" type="button">Ajouter</button>
-            <ul id="contactsList" class="list"></ul>
-          </article>
-
-          <article class="glass panel wide">
-            <h3>Historique</h3>
-            <ul id="historyList" class="list"></ul>
-          </article>
-        </div>
+      <section class="grid-nav">
+        <a class="glass nav-card" href="calls.html">Appels</a>
+        <a class="glass nav-card" href="contact.html">Contacts</a>
+        <a class="glass nav-card" href="message.html">Messages</a>
+        <a class="glass nav-card" href="history.html">Historique</a>
       </section>
-
-      <div id="toast" class="toast hidden"></div>
     </main>
 
-    <script type="module" src="app.js"></script>
+    <script type="module">
+      import { checkAuth, logout } from "./app.js";
+
+      await checkAuth();
+      document.getElementById("logoutBtn").addEventListener("click", logout);
+    </script>
   </body>
 </html>

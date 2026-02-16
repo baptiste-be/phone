@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone® · Contacts</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar glass">
+      <h1 class="brand">Phone®</h1>
+      <a class="btn-link" href="index.html">Retour</a>
+    </header>
+
+    <main class="page">
+      <section class="glass card">
+        <h2>Ajouter un contact</h2>
+        <form id="contactForm" class="stack">
+          <input id="contactName" placeholder="Nom" required />
+          <input id="contactNumber" placeholder="12-34-56-78-90" required />
+          <button type="submit" class="btn-primary">Ajouter</button>
+        </form>
+      </section>
+
+      <section class="glass card">
+        <h2>Liste des contacts</h2>
+        <ul id="contactList" class="list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="contacts.js"></script>
+  </body>
+</html>

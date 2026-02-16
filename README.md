@@ -1,27 +1,38 @@
 # Phone®
 
-Application web de communication au style liquid glass (inspiration Apple), avec Firebase.
+Phone® est une application web Firebase (Auth + Firestore) avec interface sombre Liquid Glass responsive.
 
 ## Fonctionnalités
 
-- Authentification Email/Mot de passe Firebase.
-- Création de compte avec choix optionnel d'un numéro au format `XX-XX-XX-XX-XX` (si disponible).
-- Génération aléatoire d'un numéro libre.
-- Réservation atomique du numéro dans Firestore.
-- Appels/messages avec historique.
-- Contacts enregistrés.
-- Synchronisation multi-appareils via Firebase.
+- Création de compte / connexion
+- Génération automatique d’un numéro unique `XX-XX-XX-XX-XX`
+- Gestion des contacts
+- Messagerie temps réel
+- Enregistrement des appels
+- Historique en temps réel
 
-## Setup
+## Fichiers
 
-1. Crée un projet Firebase.
-2. Active **Authentication > Email/Password**.
-3. Crée une base **Cloud Firestore**.
-4. Remplace les valeurs de `firebase-config.js`.
-5. Lance:
+- `login.html` : connexion / création de compte
+- `index.html` : accueil utilisateur
+- `contact.html` + `contacts.js` : contacts
+- `message.html` + `messages.js` : chat global temps réel
+- `calls.html` + `calls.js` : enregistrement appels
+- `history.html` + `history.js` : historique
+- `app.js` : auth Firebase, checkAuth, helpers Firestore
+- `style.css` : thème sombre liquid glass
+
+## Structure Firestore
+
+- `users/{uid}` → `email`, `phoneNumber`
+- `contacts/{uid}/list/{contactId}` → `{ name, number }`
+- `messages/global/texts/{msgId}` → `{ from, text, timestamp }`
+- `history/{uid}/calls/{callId}` → `{ number, type, timestamp }`
+
+## Lancer en local
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Puis ouvre <http://localhost:4173>.
+Puis ouvrir `http://localhost:4173/login.html`.

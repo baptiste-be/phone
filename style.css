@@ -1,0 +1,228 @@
+:root {
+  color-scheme: dark;
+  font-family: "SF Pro Display", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --bg: #05070d;
+  --bg2: #0a1020;
+  --text: #edf2ff;
+  --muted: rgba(237, 242, 255, 0.7);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  min-height: 100vh;
+  background:
+    radial-gradient(35rem 20rem at 8% -2%, rgba(103, 149, 255, 0.2), transparent 58%),
+    radial-gradient(35rem 20rem at 100% -4%, rgba(170, 127, 255, 0.18), transparent 58%),
+    linear-gradient(170deg, #020306 0%, var(--bg) 45%, var(--bg2) 100%);
+}
+
+.page {
+  width: min(980px, 92vw);
+  margin: 1rem auto 2rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.center-page {
+  min-height: 100vh;
+  margin: 0 auto;
+  display: grid;
+  align-content: center;
+}
+
+.topbar {
+  width: min(980px, 92vw);
+  margin: 1rem auto;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 640;
+}
+
+.glass {
+  position: relative;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: linear-gradient(152deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent 35%);
+  pointer-events: none;
+}
+
+.card {
+  padding: 1.1rem 1.2rem;
+}
+
+.auth-card {
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.stack {
+  display: grid;
+  gap: 0.6rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  border-radius: 12px;
+  padding: 0.74rem 0.85rem;
+  width: 100%;
+}
+
+input,
+select,
+textarea {
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  font-weight: 700;
+  color: #0b2242;
+  min-height: 44px;
+  font-size: 17px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.2));
+  backdrop-filter: blur(14px);
+}
+
+button:hover { filter: brightness(1.05); }
+
+.btn-primary { }
+
+.btn-danger {
+  width: auto;
+  min-width: 150px;
+  color: #4c0a16;
+  background: linear-gradient(155deg, rgba(255, 213, 219, 0.95), rgba(255, 158, 179, 0.8));
+}
+
+.btn-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--text);
+  width: auto;
+  border: 0;
+  background: transparent;
+  min-height: auto;
+  font-size: 0.95rem;
+  padding: 0.35rem 0;
+}
+
+.error-box {
+  min-height: 1.3rem;
+  color: #ffb6c4;
+}
+
+.muted { color: var(--muted); }
+
+.grid-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.nav-card {
+  padding: 1.2rem;
+  text-decoration: none;
+  color: var(--text);
+  text-align: center;
+  font-weight: 600;
+}
+
+.list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.list li {
+  padding: 0.58rem;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.chat-card { padding-bottom: 0.9rem; }
+
+.messages-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0;
+  display: grid;
+  gap: 0.45rem;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.message-bubble {
+  max-width: 78%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+}
+
+.message-bubble.other {
+  justify-self: start;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-bubble.me {
+  justify-self: end;
+  background: rgba(143, 186, 255, 0.24);
+  border: 1px solid rgba(180, 214, 255, 0.42);
+}
+
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+@media (max-width: 780px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .btn-danger {
+    width: 100%;
+  }
+
+  .chat-input-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,362 +1,183 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   createUserWithEmailAndPassword,
+  getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut,
-  getAuth
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   addDoc,
   collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
   onSnapshot,
   orderBy,
   query,
-  runTransaction,
   serverTimestamp,
-  setDoc
+  setDoc,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const formatRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const desiredNumberInput = document.getElementById("desiredNumber");
-const authForm = document.getElementById("authForm");
-const signupBtn = document.getElementById("signupBtn");
-const loginBtn = document.getElementById("loginBtn");
-const configHint = document.getElementById("configHint");
-const authCard = document.getElementById("authCard");
-const dashboard = document.getElementById("dashboard");
-const welcome = document.getElementById("welcome");
-const logoutBtn = document.getElementById("logoutBtn");
-const phoneNumberInput = document.getElementById("phoneNumber");
-const generateBtn = document.getElementById("generateBtn");
-const claimBtn = document.getElementById("claimBtn");
-const callTarget = document.getElementById("callTarget");
-const callBtn = document.getElementById("callBtn");
-const messageTarget = document.getElementById("messageTarget");
-const messageBody = document.getElementById("messageBody");
-const sendMessageBtn = document.getElementById("sendMessageBtn");
-const contactName = document.getElementById("contactName");
-const contactPhone = document.getElementById("contactPhone");
-const addContactBtn = document.getElementById("addContactBtn");
-const contactsList = document.getElementById("contactsList");
-const historyList = document.getElementById("historyList");
-const toast = document.getElementById("toast");
+const phoneRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
+let currentMode = "login";
 
-let app;
-let auth;
-let db;
-let currentUser = null;
-let unsubContacts = null;
-let unsubHistory = null;
-
-function showToast(text) {
-  toast.textContent = text;
-  toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), 3200);
+function safeText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
 }
 
-function normalizeFirebaseError(error) {
+function normalizeError(error) {
   const code = error?.code || "";
   const map = {
     "auth/email-already-in-use": "Cet email est déjà utilisé.",
     "auth/invalid-email": "Adresse email invalide.",
     "auth/weak-password": "Mot de passe trop faible (minimum 6 caractères).",
     "auth/invalid-credential": "Identifiants invalides.",
-    "auth/user-not-found": "Compte introuvable.",
+    "auth/user-not-found": "Utilisateur introuvable.",
     "auth/wrong-password": "Mot de passe incorrect.",
-    "auth/operation-not-allowed": "Active Email/Mot de passe dans Firebase Authentication.",
-    "auth/network-request-failed": "Erreur réseau. Vérifie ta connexion.",
-    "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
-    "auth/invalid-api-key": "Configuration Firebase invalide (apiKey)."
+    "auth/network-request-failed": "Erreur réseau.",
+    "auth/operation-not-allowed": "Active Email/Mot de passe dans Firebase Authentication."
   };
   return map[code] || error?.message || "Une erreur est survenue.";
 }
 
-function hasPlaceholderFirebaseConfig() {
-  const values = Object.values(firebaseConfig || {});
-  return values.some((value) => typeof value === "string" && value.startsWith("YOUR_"));
-}
+export function generatePhoneNumber(uid) {
+  const digits = [];
+  let seed = 0;
 
-function randomPhoneNumber() {
-  const parts = Array.from({ length: 5 }, () => `${Math.floor(Math.random() * 100)}`.padStart(2, "0"));
-  return parts.join("-");
-}
+  for (let i = 0; i < uid.length; i += 1) {
+    seed = (seed * 31 + uid.charCodeAt(i)) % 1000000007;
+  }
 
-async function generateAvailableNumber() {
-  for (let i = 0; i < 40; i += 1) {
-    const candidate = randomPhoneNumber();
-    const taken = await getDoc(doc(db, "phones", candidate));
-    if (!taken.exists()) {
-      phoneNumberInput.value = candidate;
-      return;
+  while (digits.length < 10) {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    const block = String(seed).padStart(10, "0");
+    for (const c of block) {
+      digits.push(c);
+      if (digits.length === 10) break;
     }
   }
-  showToast("Aucun numéro libre trouvé pour le moment.");
+
+  return `${digits[0]}${digits[1]}-${digits[2]}${digits[3]}-${digits[4]}${digits[5]}-${digits[6]}${digits[7]}-${digits[8]}${digits[9]}`;
 }
 
-async function reserveNumber(number) {
-  if (!currentUser) return { ok: false, reason: "no-user" };
+async function ensureUserPhone(uid, email = "") {
+  const userRef = doc(db, "users", uid);
+  const snap = await getDoc(userRef);
 
-  if (!formatRegex.test(number)) {
-    return { ok: false, reason: "invalid-format" };
+  if (snap.exists() && phoneRegex.test(snap.data().phoneNumber || "")) {
+    return snap.data().phoneNumber;
   }
 
-  try {
-    await runTransaction(db, async (transaction) => {
-      const phoneRef = doc(db, "phones", number);
-      const phoneDoc = await transaction.get(phoneRef);
-      if (phoneDoc.exists()) {
-        throw new Error("taken");
+  let phone = generatePhoneNumber(uid);
+
+  // ensure uniqueness among users
+  let guard = 0;
+  while (guard < 30) {
+    const q = query(collection(db, "users"), where("phoneNumber", "==", phone));
+    const res = await getDocs(q);
+    if (res.empty || (res.size === 1 && res.docs[0].id === uid)) {
+      break;
+    }
+    phone = generatePhoneNumber(`${uid}-${guard}`);
+    guard += 1;
+  }
+
+  await setDoc(
+    userRef,
+    {
+      email,
+      phoneNumber: phone,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+
+  return phone;
+}
+
+export async function checkAuth() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
       }
 
-      const userRef = doc(db, "users", currentUser.uid);
-      transaction.set(phoneRef, { uid: currentUser.uid, createdAt: serverTimestamp() });
-      transaction.set(userRef, { email: currentUser.email, phoneNumber: number, updatedAt: serverTimestamp() }, { merge: true });
+      const phone = await ensureUserPhone(user.uid, user.email || "");
+      safeText("userEmail", user.email || "-");
+      safeText("userPhone", phone);
+      resolve(user);
     });
+  });
+}
 
-    return { ok: true };
-  } catch (error) {
-    if (error.message === "taken") return { ok: false, reason: "taken" };
-    return { ok: false, reason: "unknown", error };
+export async function submitForm(mode) {
+  const email = document.getElementById("email")?.value?.trim() || "";
+  const password = document.getElementById("password")?.value || "";
+
+  if (!email || !password) {
+    throw new Error("Email et mot de passe requis.");
+  }
+
+  if (mode === "register") {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await ensureUserPhone(cred.user.uid, email);
+    return cred;
+  }
+
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export function toggleMode() {
+  currentMode = currentMode === "login" ? "register" : "login";
+  const title = document.getElementById("authTitle");
+  const submitBtn = document.getElementById("submitBtn");
+  const modeSwitch = document.getElementById("modeSwitch");
+
+  if (title) {
+    title.textContent = currentMode === "login" ? "Connexion" : "Créer un compte";
+  }
+
+  if (submitBtn) {
+    submitBtn.textContent = currentMode === "login" ? "Se connecter" : "Créer le compte";
+  }
+
+  if (modeSwitch) {
+    modeSwitch.textContent =
+      currentMode === "login" ? "Pas encore de compte ? Créer un compte" : "Déjà un compte ? Se connecter";
   }
 }
 
-async function sendHistory(type, target, content = "") {
-  if (!currentUser) return;
-  await addDoc(collection(db, "users", currentUser.uid, "history"), {
-    type,
-    target,
-    content,
-    createdAt: serverTimestamp()
-  });
+export function getCurrentMode() {
+  return currentMode;
 }
 
-function renderList(targetEl, items, renderer) {
-  targetEl.innerHTML = "";
-  if (!items.length) {
-    targetEl.innerHTML = "<li>Aucune donnée.</li>";
-    return;
-  }
-
-  for (const item of items) {
-    const li = document.createElement("li");
-    li.innerHTML = renderer(item);
-    targetEl.appendChild(li);
-  }
+export async function logout() {
+  await signOut(auth);
+  window.location.href = "login.html";
 }
 
-async function addContact() {
-  if (!currentUser) return;
-  const name = contactName.value.trim();
-  const phone = contactPhone.value.trim();
-
-  if (!name || !formatRegex.test(phone)) {
-    showToast("Contact invalide.");
-    return;
-  }
-
-  await addDoc(collection(db, "users", currentUser.uid, "contacts"), {
-    name,
-    phone,
-    createdAt: serverTimestamp()
-  });
-
-  contactName.value = "";
-  contactPhone.value = "";
-  showToast("Contact ajouté.");
-}
-
-function subscribeUserData(uid) {
-  if (unsubContacts) unsubContacts();
-  if (unsubHistory) unsubHistory();
-
-  const contactsQuery = query(collection(db, "users", uid, "contacts"), orderBy("createdAt", "desc"));
-  unsubContacts = onSnapshot(contactsQuery, (snapshot) => {
-    const contacts = snapshot.docs.map((item) => item.data());
-    renderList(contactsList, contacts, (item) => `<strong>${item.name}</strong><br><span>${item.phone}</span>`);
-  });
-
-  const historyQuery = query(collection(db, "users", uid, "history"), orderBy("createdAt", "desc"));
-  unsubHistory = onSnapshot(historyQuery, (snapshot) => {
-    const entries = snapshot.docs.map((item) => item.data());
-    renderList(
-      historyList,
-      entries,
-      (item) => `<strong>${item.type === "call" ? "Appel" : "Message"}</strong> → ${item.target}<br><small>${item.content || "-"}</small>`
-    );
-  });
-}
-
-function notifyLiquidGlass(title, body) {
-  showToast(`${title} — ${body}`);
-  if (!("Notification" in window)) return;
-
-  if (Notification.permission === "granted") {
-    new Notification(title, { body });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") new Notification(title, { body });
-    });
-  }
-}
-
-function wireEvents() {
-  authForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const desired = desiredNumberInput.value.trim();
-    if (desired && !formatRegex.test(desired)) {
-      showToast("Format numéro invalide: XX-XX-XX-XX-XX.");
-      return;
-    }
-
-    try {
-      const credential = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-      currentUser = credential.user;
-
-      if (desired) {
-        const result = await reserveNumber(desired);
-        if (result.ok) {
-          showToast(`Compte créé. Numéro ${desired} réservé.`);
-        } else if (result.reason === "taken") {
-          showToast("Compte créé, mais ce numéro est déjà pris.");
-        } else {
-          showToast("Compte créé, mais réservation impossible pour ce numéro.");
-        }
-      } else {
-        showToast("Compte créé avec succès.");
-      }
-    } catch (error) {
-      showToast(normalizeFirebaseError(error));
-    }
-  });
-
-  loginBtn.addEventListener("click", async () => {
-    try {
-      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-      showToast("Connexion réussie.");
-    } catch (error) {
-      showToast(normalizeFirebaseError(error));
-    }
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-  });
-
-  generateBtn.addEventListener("click", generateAvailableNumber);
-
-  claimBtn.addEventListener("click", async () => {
-    const number = phoneNumberInput.value.trim();
-    const result = await reserveNumber(number);
-
-    if (result.ok) {
-      showToast(`Numéro ${number} réservé.`);
-      return;
-    }
-
-    if (result.reason === "invalid-format") {
-      showToast("Format attendu: XX-XX-XX-XX-XX.");
-      return;
-    }
-
-    if (result.reason === "taken") {
-      showToast("Ce numéro est déjà pris.");
-      return;
-    }
-
-    showToast("Réservation impossible.");
-  });
-
-  addContactBtn.addEventListener("click", addContact);
-
-  callBtn.addEventListener("click", async () => {
-    const target = callTarget.value.trim();
-    if (!formatRegex.test(target)) {
-      showToast("Numéro invalide.");
-      return;
-    }
-    await sendHistory("call", target);
-    notifyLiquidGlass("Appel", `Vers ${target}`);
-  });
-
-  sendMessageBtn.addEventListener("click", async () => {
-    const target = messageTarget.value.trim();
-    const body = messageBody.value.trim();
-
-    if (!formatRegex.test(target) || !body) {
-      showToast("Message invalide.");
-      return;
-    }
-
-    await sendHistory("message", target, body);
-    notifyLiquidGlass("Message", `Envoyé à ${target}`);
-    messageBody.value = "";
-  });
-}
-
-function initAuthStateListener() {
-  onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-
-    if (!user) {
-      authCard.classList.remove("hidden");
-      dashboard.classList.add("hidden");
-      if (unsubContacts) {
-        unsubContacts();
-        unsubContacts = null;
-      }
-      if (unsubHistory) {
-        unsubHistory();
-        unsubHistory = null;
-      }
-      return;
-    }
-
-    authCard.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-    welcome.textContent = `Connecté: ${user.email}`;
-
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-      await setDoc(userRef, { email: user.email, createdAt: serverTimestamp() }, { merge: true });
-    }
-
-    phoneNumberInput.value = userSnap.data()?.phoneNumber || "";
-    if (!phoneNumberInput.value) {
-      await generateAvailableNumber();
-    }
-
-    subscribeUserData(user.uid);
-  });
-}
-
-function boot() {
-  if (hasPlaceholderFirebaseConfig()) {
-    signupBtn.disabled = true;
-    loginBtn.disabled = true;
-    configHint.classList.remove("hidden");
-    showToast("Configuration Firebase manquante.");
-    return;
-  }
-
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    wireEvents();
-    initAuthStateListener();
-  } catch (error) {
-    showToast(normalizeFirebaseError(error));
-  }
-}
-
-boot();
+export { auth, db };
+export {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  onSnapshot,
+  serverTimestamp,
+  orderBy,
+  doc,
+  setDoc,
+  getDoc,
+  normalizeError
+};

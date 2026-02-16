@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phone® · Appels</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar glass">
+      <h1 class="brand">Phone®</h1>
+      <a class="btn-link" href="index.html">Retour</a>
+    </header>
+
+    <main class="page">
+      <section class="glass card">
+        <h2>Enregistrer un appel</h2>
+        <form id="callForm" class="stack">
+          <input id="callNumber" placeholder="12-34-56-78-90" required />
+          <select id="callType">
+            <option value="entrant">Entrant</option>
+            <option value="sortant">Sortant</option>
+          </select>
+          <button type="submit" class="btn-primary">Enregistrer</button>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="calls.js"></script>
+  </body>
+</html>
