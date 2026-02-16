@@ -21,8 +21,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
+const formatRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
+
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
+const desiredNumberInput = document.getElementById("desiredNumber");
 const authForm = document.getElementById("authForm");
 const signupBtn = document.getElementById("signupBtn");
 const loginBtn = document.getElementById("loginBtn");
@@ -46,8 +49,6 @@ const contactsList = document.getElementById("contactsList");
 const historyList = document.getElementById("historyList");
 const toast = document.getElementById("toast");
 
-const formatRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
-
 let app;
 let auth;
 let db;
@@ -70,7 +71,7 @@ function normalizeFirebaseError(error) {
     "auth/invalid-credential": "Identifiants invalides.",
     "auth/user-not-found": "Compte introuvable.",
     "auth/wrong-password": "Mot de passe incorrect.",
-    "auth/operation-not-allowed": "Email/Mot de passe non activé dans Firebase Authentication.",
+    "auth/operation-not-allowed": "Active Email/Mot de passe dans Firebase Authentication.",
     "auth/network-request-failed": "Erreur réseau. Vérifie ta connexion.",
     "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
     "auth/invalid-api-key": "Configuration Firebase invalide (apiKey)."
@@ -78,26 +79,14 @@ function normalizeFirebaseError(error) {
   return map[code] || error?.message || "Une erreur est survenue.";
 }
 
-function notifyLiquidGlass(title, body) {
-  showToast(`${title} — ${body}`);
-  if (!("Notification" in window)) return;
-  if (Notification.permission === "granted") {
-    new Notification(title, { body });
-  } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") new Notification(title, { body });
-    });
-  }
+function hasPlaceholderFirebaseConfig() {
+  const values = Object.values(firebaseConfig || {});
+  return values.some((value) => typeof value === "string" && value.startsWith("YOUR_"));
 }
 
 function randomPhoneNumber() {
   const parts = Array.from({ length: 5 }, () => `${Math.floor(Math.random() * 100)}`.padStart(2, "0"));
   return parts.join("-");
-}
-
-function hasPlaceholderFirebaseConfig() {
-  const values = Object.values(firebaseConfig || {});
-  return values.some((value) => typeof value === "string" && value.startsWith("YOUR_"));
 }
 
 async function generateAvailableNumber() {
@@ -112,29 +101,30 @@ async function generateAvailableNumber() {
   showToast("Aucun numéro libre trouvé pour le moment.");
 }
 
-async function reserveNumber() {
-  if (!currentUser) return;
-  const number = phoneNumberInput.value.trim();
+async function reserveNumber(number) {
+  if (!currentUser) return { ok: false, reason: "no-user" };
 
   if (!formatRegex.test(number)) {
-    showToast("Format attendu: XX-XX-XX-XX-XX.");
-    return;
+    return { ok: false, reason: "invalid-format" };
   }
 
   try {
     await runTransaction(db, async (transaction) => {
       const phoneRef = doc(db, "phones", number);
       const phoneDoc = await transaction.get(phoneRef);
-      if (phoneDoc.exists()) throw new Error("Ce numéro est déjà pris.");
+      if (phoneDoc.exists()) {
+        throw new Error("taken");
+      }
 
       const userRef = doc(db, "users", currentUser.uid);
       transaction.set(phoneRef, { uid: currentUser.uid, createdAt: serverTimestamp() });
       transaction.set(userRef, { email: currentUser.email, phoneNumber: number, updatedAt: serverTimestamp() }, { merge: true });
     });
 
-    showToast(`Numéro ${number} réservé.`);
+    return { ok: true };
   } catch (error) {
-    showToast(error.message || "Réservation impossible.");
+    if (error.message === "taken") return { ok: false, reason: "taken" };
+    return { ok: false, reason: "unknown", error };
   }
 }
 
@@ -154,6 +144,7 @@ function renderList(targetEl, items, renderer) {
     targetEl.innerHTML = "<li>Aucune donnée.</li>";
     return;
   }
+
   for (const item of items) {
     const li = document.createElement("li");
     li.innerHTML = renderer(item);
@@ -163,9 +154,9 @@ function renderList(targetEl, items, renderer) {
 
 async function addContact() {
   if (!currentUser) return;
-
   const name = contactName.value.trim();
   const phone = contactPhone.value.trim();
+
   if (!name || !formatRegex.test(phone)) {
     showToast("Contact invalide.");
     return;
@@ -195,16 +186,53 @@ function subscribeUserData(uid) {
   const historyQuery = query(collection(db, "users", uid, "history"), orderBy("createdAt", "desc"));
   unsubHistory = onSnapshot(historyQuery, (snapshot) => {
     const entries = snapshot.docs.map((item) => item.data());
-    renderList(historyList, entries, (item) => `<strong>${item.type === "call" ? "Appel" : "Message"}</strong> → ${item.target}<br><small>${item.content || "-"}</small>`);
+    renderList(
+      historyList,
+      entries,
+      (item) => `<strong>${item.type === "call" ? "Appel" : "Message"}</strong> → ${item.target}<br><small>${item.content || "-"}</small>`
+    );
   });
+}
+
+function notifyLiquidGlass(title, body) {
+  showToast(`${title} — ${body}`);
+  if (!("Notification" in window)) return;
+
+  if (Notification.permission === "granted") {
+    new Notification(title, { body });
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") new Notification(title, { body });
+    });
+  }
 }
 
 function wireEvents() {
   authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    const desired = desiredNumberInput.value.trim();
+    if (desired && !formatRegex.test(desired)) {
+      showToast("Format numéro invalide: XX-XX-XX-XX-XX.");
+      return;
+    }
+
     try {
-      await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-      showToast("Compte créé avec succès.");
+      const credential = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+      currentUser = credential.user;
+
+      if (desired) {
+        const result = await reserveNumber(desired);
+        if (result.ok) {
+          showToast(`Compte créé. Numéro ${desired} réservé.`);
+        } else if (result.reason === "taken") {
+          showToast("Compte créé, mais ce numéro est déjà pris.");
+        } else {
+          showToast("Compte créé, mais réservation impossible pour ce numéro.");
+        }
+      } else {
+        showToast("Compte créé avec succès.");
+      }
     } catch (error) {
       showToast(normalizeFirebaseError(error));
     }
@@ -224,7 +252,29 @@ function wireEvents() {
   });
 
   generateBtn.addEventListener("click", generateAvailableNumber);
-  claimBtn.addEventListener("click", reserveNumber);
+
+  claimBtn.addEventListener("click", async () => {
+    const number = phoneNumberInput.value.trim();
+    const result = await reserveNumber(number);
+
+    if (result.ok) {
+      showToast(`Numéro ${number} réservé.`);
+      return;
+    }
+
+    if (result.reason === "invalid-format") {
+      showToast("Format attendu: XX-XX-XX-XX-XX.");
+      return;
+    }
+
+    if (result.reason === "taken") {
+      showToast("Ce numéro est déjà pris.");
+      return;
+    }
+
+    showToast("Réservation impossible.");
+  });
+
   addContactBtn.addEventListener("click", addContact);
 
   callBtn.addEventListener("click", async () => {
@@ -281,7 +331,9 @@ function initAuthStateListener() {
     }
 
     phoneNumberInput.value = userSnap.data()?.phoneNumber || "";
-    if (!phoneNumberInput.value) await generateAvailableNumber();
+    if (!phoneNumberInput.value) {
+      await generateAvailableNumber();
+    }
 
     subscribeUserData(user.uid);
   });

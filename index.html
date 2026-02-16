@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Liquid Glass Phone</title>
+    <title>Phone®</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -12,14 +12,12 @@
 
     <main class="shell">
       <header class="glass header">
-        <div>
-          <h1>Liquid Glass Phone</h1>
-          <p class="muted">Édition noire, sobre et multi-appareils avec Firebase.</p>
-        </div>
+        <h1>Phone®</h1>
+        <p class="muted">Communication sobre, style liquid glass.</p>
       </header>
 
       <section class="glass auth" id="authCard">
-        <h2>Connexion</h2>
+        <h2>Créer un compte</h2>
         <form id="authForm" class="stack">
           <label>
             Email
@@ -29,11 +27,17 @@
             Mot de passe
             <input id="password" type="password" required minlength="6" placeholder="Minimum 6 caractères" />
           </label>
+          <label>
+            Numéro souhaité (optionnel)
+            <input id="desiredNumber" placeholder="12-34-56-78-90" />
+          </label>
+
           <div class="row">
             <button type="submit" id="signupBtn">Créer un compte</button>
             <button type="button" id="loginBtn">Se connecter</button>
           </div>
-          <p id="configHint" class="muted hidden">Configure d'abord `firebase-config.js` avec tes vraies clés.</p>
+
+          <p id="configHint" class="muted hidden">Configure `firebase-config.js` avec tes clés Firebase.</p>
         </form>
       </section>
 
@@ -46,17 +50,18 @@
         <div class="grid">
           <article class="glass panel">
             <h3>Numéro</h3>
+            <p class="muted">Format: XX-XX-XX-XX-XX</p>
             <div class="row-tight">
-              <input id="phoneNumber" readonly />
-              <button id="generateBtn" type="button">Nouveau</button>
+              <input id="phoneNumber" placeholder="12-34-56-78-90" />
+              <button id="generateBtn" type="button">Aléatoire</button>
             </div>
-            <button id="claimBtn" type="button">Réserver</button>
+            <button id="claimBtn" type="button">Réserver ce numéro</button>
           </article>
 
           <article class="glass panel">
             <h3>Appel</h3>
             <input id="callTarget" placeholder="12-34-56-78-90" />
-            <button id="callBtn" type="button">Lancer l'appel</button>
+            <button id="callBtn" type="button">Appeler</button>
           </article>
 
           <article class="glass panel">
