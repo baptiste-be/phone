@@ -1,8 +1,24 @@
-import { addDoc, auth, checkAuth, collection, db, getDocs, query } from "./app.js";
+import {
+  addDoc,
+  auth,
+  checkAuth,
+  collection,
+  db,
+  getDocs,
+  phoneRegex,
+  query,
+  where
+} from "./app.js";
 
 const contactForm = document.getElementById("contactForm");
 const contactList = document.getElementById("contactList");
-const phoneRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
+
+async function resolveUidFromPhone(number) {
+  const q = query(collection(db, "users"), where("phoneNumber", "==", number));
+  const res = await getDocs(q);
+  if (res.empty) return null;
+  return res.docs[0].id;
+}
 
 export async function addContact() {
   const user = auth.currentUser;
@@ -15,7 +31,14 @@ export async function addContact() {
     return;
   }
 
-  await addDoc(collection(db, "contacts", user.uid, "list"), { name, number });
+  const uid = await resolveUidFromPhone(number);
+
+  await addDoc(collection(db, "contacts", user.uid, "list"), {
+    name,
+    number,
+    uid: uid || null
+  });
+
   document.getElementById("contactName").value = "";
   document.getElementById("contactNumber").value = "";
   await loadContacts();

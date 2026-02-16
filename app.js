@@ -16,6 +16,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   where
@@ -29,12 +30,17 @@ const db = getFirestore(app);
 const phoneRegex = /^\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$/;
 let currentMode = "login";
 
+function randomPhoneNumber() {
+  const parts = Array.from({ length: 5 }, () => String(Math.floor(Math.random() * 100)).padStart(2, "0"));
+  return parts.join("-");
+}
+
 function safeText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
 }
 
-function normalizeError(error) {
+export function normalizeError(error) {
   const code = error?.code || "";
   const map = {
     "auth/email-already-in-use": "Cet email est déjà utilisé.",
@@ -50,17 +56,16 @@ function normalizeError(error) {
 }
 
 export function generatePhoneNumber(uid) {
-  const digits = [];
   let seed = 0;
-
   for (let i = 0; i < uid.length; i += 1) {
-    seed = (seed * 31 + uid.charCodeAt(i)) % 1000000007;
+    seed = (seed * 33 + uid.charCodeAt(i)) >>> 0;
   }
 
+  const digits = [];
   while (digits.length < 10) {
-    seed = (seed * 1664525 + 1013904223) % 4294967296;
-    const block = String(seed).padStart(10, "0");
-    for (const c of block) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const chunk = String(seed).padStart(10, "0");
+    for (const c of chunk) {
       digits.push(c);
       if (digits.length === 10) break;
     }
@@ -69,39 +74,53 @@ export function generatePhoneNumber(uid) {
   return `${digits[0]}${digits[1]}-${digits[2]}${digits[3]}-${digits[4]}${digits[5]}-${digits[6]}${digits[7]}-${digits[8]}${digits[9]}`;
 }
 
-async function ensureUserPhone(uid, email = "") {
+async function reservePhoneForUser(uid, email = "") {
   const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
+  const userSnap = await getDoc(userRef);
+  const existingPhone = userSnap.data()?.phoneNumber;
 
-  if (snap.exists() && phoneRegex.test(snap.data().phoneNumber || "")) {
-    return snap.data().phoneNumber;
-  }
-
-  let phone = generatePhoneNumber(uid);
-
-  // ensure uniqueness among users
-  let guard = 0;
-  while (guard < 30) {
-    const q = query(collection(db, "users"), where("phoneNumber", "==", phone));
-    const res = await getDocs(q);
-    if (res.empty || (res.size === 1 && res.docs[0].id === uid)) {
-      break;
+  if (phoneRegex.test(existingPhone || "")) {
+    const phoneRef = doc(db, "phones", existingPhone);
+    const phoneSnap = await getDoc(phoneRef);
+    if (!phoneSnap.exists()) {
+      await setDoc(phoneRef, { uid, createdAt: serverTimestamp() }, { merge: true });
     }
-    phone = generatePhoneNumber(`${uid}-${guard}`);
-    guard += 1;
+    await setDoc(userRef, { email, updatedAt: serverTimestamp() }, { merge: true });
+    return existingPhone;
   }
 
-  await setDoc(
-    userRef,
-    {
-      email,
-      phoneNumber: phone,
-      updatedAt: serverTimestamp()
-    },
-    { merge: true }
-  );
+  const deterministic = generatePhoneNumber(uid);
+  const candidates = [deterministic, ...Array.from({ length: 80 }, randomPhoneNumber)];
 
-  return phone;
+  for (const candidate of candidates) {
+    const result = await runTransaction(db, async (transaction) => {
+      const phoneRef = doc(db, "phones", candidate);
+      const phoneTaken = await transaction.get(phoneRef);
+      if (phoneTaken.exists()) {
+        return null;
+      }
+
+      const userInTx = await transaction.get(userRef);
+      const currentPhone = userInTx.data()?.phoneNumber;
+      if (phoneRegex.test(currentPhone || "")) {
+        return currentPhone;
+      }
+
+      transaction.set(phoneRef, { uid, createdAt: serverTimestamp() });
+      transaction.set(
+        userRef,
+        { email, phoneNumber: candidate, updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      return candidate;
+    });
+
+    if (phoneRegex.test(result || "")) {
+      return result;
+    }
+  }
+
+  throw new Error("Impossible d'attribuer un numéro Phone® pour le moment.");
 }
 
 export async function checkAuth() {
@@ -112,7 +131,7 @@ export async function checkAuth() {
         return;
       }
 
-      const phone = await ensureUserPhone(user.uid, user.email || "");
+      const phone = await reservePhoneForUser(user.uid, user.email || "");
       safeText("userEmail", user.email || "-");
       safeText("userPhone", phone);
       resolve(user);
@@ -130,7 +149,7 @@ export async function submitForm(mode) {
 
   if (mode === "register") {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await ensureUserPhone(cred.user.uid, email);
+    await reservePhoneForUser(cred.user.uid, email);
     return cred;
   }
 
@@ -139,18 +158,13 @@ export async function submitForm(mode) {
 
 export function toggleMode() {
   currentMode = currentMode === "login" ? "register" : "login";
+
   const title = document.getElementById("authTitle");
   const submitBtn = document.getElementById("submitBtn");
   const modeSwitch = document.getElementById("modeSwitch");
 
-  if (title) {
-    title.textContent = currentMode === "login" ? "Connexion" : "Créer un compte";
-  }
-
-  if (submitBtn) {
-    submitBtn.textContent = currentMode === "login" ? "Se connecter" : "Créer le compte";
-  }
-
+  if (title) title.textContent = currentMode === "login" ? "Connexion" : "Créer un compte";
+  if (submitBtn) submitBtn.textContent = currentMode === "login" ? "Se connecter" : "Créer le compte";
   if (modeSwitch) {
     modeSwitch.textContent =
       currentMode === "login" ? "Pas encore de compte ? Créer un compte" : "Déjà un compte ? Se connecter";
@@ -166,7 +180,7 @@ export async function logout() {
   window.location.href = "login.html";
 }
 
-export { auth, db };
+export { auth, db, phoneRegex };
 export {
   collection,
   addDoc,
@@ -179,5 +193,5 @@ export {
   doc,
   setDoc,
   getDoc,
-  normalizeError
+  runTransaction
 };

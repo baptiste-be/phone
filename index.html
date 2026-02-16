@@ -10,29 +10,31 @@
     <header class="topbar glass">
       <div>
         <h1 class="brand">Phone®</h1>
-        <p class="muted">Accueil</p>
+        <p class="muted">Messagerie</p>
       </div>
       <button id="logoutBtn" class="btn-danger" type="button">Déconnexion</button>
     </header>
 
-    <main class="page">
-      <section class="glass card">
+    <main class="page home-layout">
+      <section class="glass card account-panel">
         <h2>Compte</h2>
-        <p><strong>Email :</strong> <span id="userEmail">...</span></p>
-        <p><strong>Numéro Phone® :</strong> <span id="userPhone">...</span></p>
+        <p><strong>Email</strong> · <span id="userEmail">...</span></p>
+        <p><strong>Numéro Phone®</strong> · <span id="userPhone">...</span></p>
       </section>
 
-      <section class="grid-nav">
-        <a class="glass nav-card" href="calls.html">Appels</a>
-        <a class="glass nav-card" href="contact.html">Contacts</a>
-        <a class="glass nav-card" href="message.html">Messages</a>
-        <a class="glass nav-card" href="history.html">Historique</a>
+      <section class="glass card quick-panel">
+        <h2>Accès rapide</h2>
+        <div class="grid-nav">
+          <a class="glass nav-card" href="message.html">Messagerie</a>
+          <a class="glass nav-card" href="contact.html">Contacts</a>
+          <a class="glass nav-card" href="calls.html">Appels</a>
+          <a class="glass nav-card" href="history.html">Historique</a>
+        </div>
       </section>
     </main>
 
     <script type="module">
       import { checkAuth, logout } from "./app.js";
-
       await checkAuth();
       document.getElementById("logoutBtn").addEventListener("click", logout);
     </script>

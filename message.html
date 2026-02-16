@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Phone® · Messages</title>
+    <title>Phone® · Messagerie</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -12,13 +12,28 @@
       <a class="btn-link" href="index.html">Retour</a>
     </header>
 
-    <main class="page">
-      <section class="glass card chat-card">
-        <h2>Messages en temps réel</h2>
+    <main class="page messenger-layout">
+      <aside class="glass card sidebar-col">
+        <h2>Contacts</h2>
+        <ul id="contactsForChat" class="list compact"></ul>
+      </aside>
+
+      <aside class="glass card chats-col">
+        <h2>Répertoire chats</h2>
+        <ul id="chatDirectory" class="list compact"></ul>
+      </aside>
+
+      <section class="glass card chat-col">
+        <div class="chat-header">
+          <h2 id="chatTitle">Sélectionne une conversation</h2>
+          <p id="chatSubtitle" class="muted">Tous tes anciens chats sont listés à gauche.</p>
+        </div>
+
         <ul id="messagesList" class="messages-list"></ul>
+
         <form id="messageForm" class="chat-input-row">
-          <input id="messageText" placeholder="Écrire un message..." required />
-          <button type="submit" class="btn-primary">Envoyer</button>
+          <input id="messageText" placeholder="Écrire un message" disabled required />
+          <button type="submit" class="btn-primary" id="sendBtn" disabled>Envoyer</button>
         </form>
       </section>
     </main>
